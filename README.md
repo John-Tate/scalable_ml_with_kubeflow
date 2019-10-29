@@ -126,6 +126,7 @@ gunzip ./utils/mac/minikube.zip
 chmod +x ./utils/mac/minikube
 sudo install ./utils/mac/minikube /usr/local/bin
 ```
+
 # Start Kubernetes Cluster
 
 ## Launch Minikube
