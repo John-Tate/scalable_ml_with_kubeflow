@@ -15,20 +15,20 @@ kubectl is a command line interface (CLI) for working with kubernetes clusters. 
 
 #### Linux
 
-```bash
-gunzip ./utils/kubectl_linux/kubectl.gz
-chmod +x ./utils/kubectl_linux/kubectl
-sudo mv ./utils/kubectl_linux/kubectl /usr/local/bin/kubectl
+```
+gunzip ./utils/linux/kubectl.gz
+chmod +x ./utils/linux/kubectl
+sudo mv ./utils/linux/kubectl /usr/local/bin/kubectl
 kubectl version
 ```
 
 #### macOS
 
 
-```bash
-gunzip ./utils/kubectl_mac/kubectl.gz
-chmod +x ./utils/kubectl_mac/kubectl
-sudo mv ./utils/kubectl_mac/kubectl /usr/local/bin/kubectl
+```
+gunzip ./utils/mac/kubectl.gz
+chmod +x ./utils/mac/kubectl
+sudo mv ./utils/mac/kubectl /usr/local/bin/kubectl
 kubectl version
 ```
 
@@ -42,8 +42,8 @@ kfctl allows us to manage the deployment of kubeflow to our kubernetes cluster
 
 #### Linux
 
-```bash
-cd ./utils/kfctl_linux/
+```
+cd ./utils/linux/
 tar -xvf kfctl_v0.6.2_linux.tar.gz
 sudo mv kfctl /user/local/bin/kfctl
 ```
@@ -51,8 +51,8 @@ sudo mv kfctl /user/local/bin/kfctl
 
 #### macOS
 
-```bash
-cd ./utils/kfctl_mac/
+```
+cd ./utils/mac/
 tar -xvf kfctl_v0.6.2_darwin.tar.gz
 sudo mv kfctl /user/local/bin/kfctl
 ```
@@ -67,7 +67,7 @@ alternatively, [download from the releases page](https://github.com/kubeflow/kub
 
 1. Verify the output of this command is non-empty to check if your CPU supports virtualization:
 
-```bash
+```
 grep -E --color 'vmx|svm' /proc/cpuinfo
 ```
 
@@ -97,19 +97,12 @@ sudo install minikube /usr/local/bin/
 ### Install macOS
 
 
-<!-- 
-To Do:
-
-## Minikube ISOs + Cache 
--->
-
-
 # Start Kubernetes Cluster
 
 ## Launch Minikube
 
 ```
-$ minikube start --cpus 4 --memory 8096 --disk-size=40g --kubernetes-version v1.14.0
+$ minikube start --cpus 4 --memory 8096 --disk-size=40g --kubernetes-version v1.14.0 --insecure-registry "10.0.0.0/24"
 ```
 
 
@@ -120,7 +113,7 @@ $ minikube addons enable registry
 ```
 
 #### 1A: Linux
-```bash
+```
 $ sudo nano /etc/docker/daemon.json
 ```
 
@@ -144,7 +137,7 @@ If you're using the minikube registry addon, we'll need to create a tunnel betwe
 
 
 In a _new_ terminal, run:
-```bash
+```
 # load local file for the alpine image w/ socat installed
 docker import ./containers/alpine.tar alpine
 
@@ -168,7 +161,7 @@ kfctl apply all -V
 ```
 
 Download and build from web
-```bash 
+``` 
 export KFAPP='kfdemo'
 export CONFIG='https://raw.githubusercontent.com/kubeflow/kubeflow/v0.6-branch/bootstrap/config/kfctl_k8s_istio.0.6.2.yaml'
 
@@ -182,15 +175,22 @@ kfctl apply all -V
 
 ```
 
+## Access Kubeflow UI
+
+```
+export NAMESPACE=istio-system
+kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
+```
+
 
 ## Seldon Setup
 
 ### Helm + Tiller
 
 #### Linux
-```bash
-tar -zxvf ./utils/linux/helm-v2.15.1-linux-amd64.tgz
-sudo mv ./utils/linux/helm /usr/local/bin/helm
+```
+tar -zxvf ./utils/linux/helm-v2.15.1-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
 
 #verify
 helm help
@@ -199,9 +199,9 @@ helm help
 #### macOS
 
 Local File:
-```bash
+```
 tar -zxvf ./utils/mac/helm-v2.15.1-darwin-amd64.tar.gz
-sudo mv ./utils/mac/helm /usr/local/bin/helm
+sudo mv linux-amd64/helm /usr/local/bin/helm
 
 
 #verify
@@ -210,16 +210,45 @@ helm help
 
 
 Homebrew
-```bash
+```
 brew install kubernetes-helm
 
 #verify
 helm help
 ```
 
+#### Initialize Helm on your Kubernetes Cluster
+
+```
+helm init --history-max 200
+```
+
+### Amassador + SeldonCore
+
+Use Helm to Install Ambassador for ingress management:
+
+```
+helm install stable/ambassador --name ambassador --set crds.keep=false
+```
+
+If you installed Kubeflow first:
+```
+kubectl delete customresourcedefinition seldondeployments.machinelearning.seldon.io
+```
+
+Use Helm to install SeldonCore
+```
+helm install seldon-core-operator --name seldon-core --repo https://storage.googleapis.com/seldon-charts --set usageMetrics.enabled=true --namespace seldon-system --set ambassador.enabled=true
+```
 
 
-### SeldonCore
+
+## Other Commands
+
+```
+minikube mount $(pwd)/pv_storage/:/mkdata
+
+kubectl port-forward $(kubectl get pods -l app.kubernetes.io/name=ambassador -o jsonpath='{.items[0].metadata.name}') 8003:8080
 
 
-## Other setup
+```
