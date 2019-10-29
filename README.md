@@ -54,7 +54,7 @@ sudo mv kfctl /user/local/bin/kfctl
 ```
 cd ./utils/mac/
 tar -xvf kfctl_v0.6.2_darwin.tar.gz
-sudo mv kfctl /user/local/bin/kfctl
+sudo mv ./kfctl /usr/local/bin/kfctl
 ```
 
 alternatively, [download from the releases page](https://github.com/kubeflow/kubeflow/releases/tag/v0.6.2) and add to your path as you see fit
@@ -96,7 +96,36 @@ sudo install minikube /usr/local/bin/
 
 ### Install macOS
 
+1. Verify the output of this command is non-empty to check if your CPU supports virtualization:
 
+```
+sysctl -a | grep -E --color 'machdep.cpu.features|VMX' 
+```
+
+2. Ensure you have a hypervisor installed. [VirtualBox](https://www.virtualbox.org/wiki/Downloads) is recomended
+
+3. Install Minikube
+
+Homebrew:
+```
+brew cask install minikube
+```
+
+Curl:
+```
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64 \
+  && chmod +x minikube
+
+sudo mv minikube /usr/local/bin
+```
+
+Local File
+
+```
+gunzip ./utils/mac/minikube.zip
+chmod +x ./utils/mac/minikube
+sudo install ./utils/mac/minikube /usr/local/bin
+```
 # Start Kubernetes Cluster
 
 ## Launch Minikube
